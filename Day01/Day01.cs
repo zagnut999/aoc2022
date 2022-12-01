@@ -3,26 +3,27 @@
 [TestFixture]
 internal class Day01
 {
+    private List<string> _sample = new List<string> {
+        "1000",
+        "2000",
+        "3000",
+        "",
+        "4000",
+        "",
+        "5000",
+        "6000",
+        "",
+        "7000",
+        "8000",
+        "9000",
+        "",
+        "10000"
+    };
+
     [Test]
     public void Example()
     {
-        var rawList = new List<string> {
-            "1000",
-            "2000",
-            "3000",
-            "",
-            "4000",
-            "",
-            "5000",
-            "6000",
-            "",
-            "7000",
-            "8000",
-            "9000",
-            "",
-            "10000"
-        };
-        Elf.FindHighestCalories(rawList).ShouldBe(24000);
+        Elf.FindHighestCalories(_sample).ShouldBe(24000);
     }
 
     [Test]
@@ -41,9 +42,24 @@ internal class Day01
         result.ShouldBe(68467);
     }
 
+    [Test]
+    public void ExamplePart2()
+    {
+        Elf.FindSumOfThreeHighestCalories(_sample).ShouldBe(45000);
+    }
+
+    [Test]
+    public async Task ActualPart2()
+    {
+        var list = await Utilities.ReadInputByDay("Day01");
+        var result = Elf.FindSumOfThreeHighestCalories(list);
+
+        result.ShouldBe(203420);
+    }
+
     internal class Elf
     {
-        public static int FindHighestCalories(List<string> rawList)
+        private static List<int> GetCalories(List<string> rawList)
         {
             var elves = new List<int>();
             var sum = 0;
@@ -59,9 +75,20 @@ internal class Day01
                     sum = 0;
                 }
             }
+            elves.Add(sum);
+            return elves;
+        }
+
+        public static int FindHighestCalories(List<string> rawList)
+        {
+            var elves = GetCalories(rawList);
 
             return elves.Max();
         }
-    }
 
+        public static int FindSumOfThreeHighestCalories(List<string> rawList)
+        {
+            return GetCalories(rawList).OrderByDescending(x => x).Take(3).Sum();
+        }
+    }
 }
