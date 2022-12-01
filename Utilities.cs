@@ -2,8 +2,21 @@
 
 internal static class Utilities
 {
-    internal static List<string> ReadList(string path)
+    public static async Task<List<string>> ReadInput(string path)
     {
-        return File.ReadLines(path).ToList();
+        return (await File.ReadAllLinesAsync(path)).ToList();
+    }
+    
+    public static async Task<List<string>> ReadInputByDay(string day)
+    {
+        var path = $"../../../{day}/input.txt";
+
+        if (File.Exists(path))
+        {
+            var list = await File.ReadAllLinesAsync(path);
+            return list.ToList();
+        }
+
+        return new List<string>();
     }
 }

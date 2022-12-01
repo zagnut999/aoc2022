@@ -26,9 +26,16 @@ internal class Day01
     }
 
     [Test]
-    public void Actual()
+    public async Task ReadDaysFile()
     {
-        var list = Utilities.ReadList("Day01/input.txt");
+        var list = await Utilities.ReadInputByDay("Day01");
+        list.ShouldNotBeEmpty();
+    }
+
+    [Test]
+    public async Task Actual()
+    {
+        var list = await Utilities.ReadInputByDay("Day01");
         var result = Elf.FindHighestCalories(list);
 
         result.ShouldBe(68467);
