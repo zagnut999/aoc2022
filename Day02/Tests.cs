@@ -1,7 +1,7 @@
 ﻿namespace aoc2022.Day02;
 
 [TestFixture]
-internal class Day02
+internal class Tests
 {
     private enum Choice
     {

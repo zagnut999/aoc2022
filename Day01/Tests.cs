@@ -1,7 +1,7 @@
 ﻿namespace aoc2022.Day01;
 
 [TestFixture]
-internal class Day01
+internal class Tests
 {
     private List<string> _sample = new List<string> {
         "1000",
