@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace aoc2022.Day05;
 
