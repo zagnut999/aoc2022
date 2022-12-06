@@ -1,7 +1,7 @@
 https://adventofcode.com/2022
 
 
-
+```
 namespace aoc2022.Day06;
 
 [TestFixture]
@@ -36,3 +36,4 @@ internal class Tests
     {
     }
 }
+```
