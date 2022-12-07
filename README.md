@@ -2,7 +2,7 @@ https://adventofcode.com/2022
 
 
 ```
-namespace aoc2022.Day06;
+namespace aoc2022.DayXX;
 
 [TestFixture]
 internal class Tests
@@ -10,15 +10,15 @@ internal class Tests
     private readonly List<string> _sample = new List<string>() { };
 
     [Test]
-    public async Task ReadDaysFile()
+    public void Example()
     {
-        var list = await Utilities.ReadInputByDay("Day06");
-        list.ShouldNotBeEmpty();
     }
 
     [Test]
-    public void Example()
+    public async Task ReadDaysFile()
     {
+        var list = await Utilities.ReadInputByDay("DayXX");
+        list.ShouldNotBeEmpty();
     }
 
     [Test]
