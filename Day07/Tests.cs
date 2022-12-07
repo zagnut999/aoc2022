@@ -69,11 +69,24 @@ internal class Tests
         public Directory(string name, Directory parent) : this(name)
         {
             Parent = parent;
+            var node = parent;
+            while (node != null)
+            {
+                node._isDirty = true;
+                node = node.Parent;
+            }
         }
 
         public void AddChild(Node node)
         {
             _isDirty = true;
+            var node2 = Parent;
+            while (node2 != null)
+            {
+                node2._isDirty = true;
+                node2 = node2.Parent;
+            }
+
             _children.Add(node);
         }
 
@@ -113,15 +126,21 @@ internal class Tests
 
         public State CD(string name)
         {
-            if (name == "/")
-                _current = Root;
-            else if (name == "..")
-                _current = _current.Parent ?? Root;
-            else
+            switch (name)
             {
-                var directory =  (Directory?) _current.Children.FirstOrDefault(x=>x is Directory && x.Name == name);
+                case "/":
+                    _current = Root;
+                    break;
+                case "..":
+                    _current = _current.Parent ?? Root;
+                    break;
+                default:
+                {
+                    var directory =  (Directory?) _current.Children.FirstOrDefault(x=>x is Directory && x.Name == name);
 
-                _current = directory ?? throw new ArgumentException($"Directory Not Found: {name}");
+                    _current = directory ?? throw new ArgumentException($"Directory Not Found: {name}");
+                    break;
+                }
             }
 
             return this;
