@@ -69,25 +69,24 @@ internal class Tests
         public Directory(string name, Directory parent) : this(name)
         {
             Parent = parent;
-            var node = parent;
-            while (node != null)
-            {
-                node._isDirty = true;
-                node = node.Parent;
-            }
+            MarkParentDirty();
         }
 
         public void AddChild(Node node)
         {
             _isDirty = true;
-            var node2 = Parent;
-            while (node2 != null)
-            {
-                node2._isDirty = true;
-                node2 = node2.Parent;
-            }
+            MarkParentDirty();
 
             _children.Add(node);
+        }
+        private void MarkParentDirty()
+        {
+            var node = Parent;
+            while (node != null)
+            {
+                node._isDirty = true;
+                node = node.Parent;
+            }
         }
 
         private long CalcSize()
