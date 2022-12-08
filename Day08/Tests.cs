@@ -37,12 +37,12 @@ internal class Tests
         }
     }
 
-    private static void GenerateTheMatrix(List<string> input, out int xMax, out int yMax, out Node[,] nodesMatrix, out List<Node> nodes)
+    private static (int xMax, int yMax, Node[,] nodesMatrix, List<Node> nodes) GenerateTheMatrix(List<string> input)
     {
-        xMax = input.First().Length;
-        yMax = input.Count;
-        nodesMatrix = new Node[xMax, yMax];
-        nodes = new List<Node>();
+        var xMax = input.First().Length;
+        var yMax = input.Count;
+        var nodesMatrix = new Node[xMax, yMax];
+        var nodes = new List<Node>();
 
         for (var x = 0; x < xMax; x++)
         {
@@ -54,12 +54,13 @@ internal class Tests
                 nodes.Add(node);
             }
         }
+        return (xMax, yMax, nodesMatrix, nodes);
     }
 
     //Worst ever
     public int NumberVisible(List<string> list)
     {
-        GenerateTheMatrix(list, out var xMax, out var yMax, out var nodesMatrix, out var nodes);
+        var (xMax, yMax, nodesMatrix, nodes) = GenerateTheMatrix(list);
 
         //Edges
         for (var x = 0; x < xMax; x++)
@@ -186,25 +187,121 @@ internal class Tests
         NumberVisible(list).ShouldBe(1798);
     }
 
-    //Worst ever
     public int NumberNeighborsVisible(List<string> list)
     {
-        GenerateTheMatrix(list, out var xMax, out var yMax, out var nodesMatrix, out var nodes);
+        var (xMax, yMax, nodesMatrix, nodes) = GenerateTheMatrix(list);
 
-        
+        foreach (var node in nodes)
+        {
+            FindTreesSeen(node, nodesMatrix, xMax, yMax);
+        }
 
         PrintMatrix("Final", xMax, yMax, nodesMatrix);
 
-        return nodes.Count(x => x.Visible);
+        return nodes.Max(x => x.TreesSeen);
+    }
+
+    private void FindTreesSeen(Node node, Node[,] nodesMatrix, int xMax, int yMax)
+    {
+        var upVis = 0;
+        //Up (node.y => 0)
+        for (var y = node.Y - 1; y >= 0; y--)
+        {
+            var neighbor = nodesMatrix[node.X, y];
+            upVis++;
+
+            if (neighbor.Height >= node.Height)
+                break;
+        }
+
+        var downVis = 0;
+        //Down (node.y => yMax)
+        for (var y = node.Y + 1; y < yMax; y++)
+        {
+            var neighbor = nodesMatrix[node.X, y];
+            downVis++;
+
+            if (neighbor.Height >= node.Height)
+                break;
+        }
+
+        //Left (node.x => 0)
+        var leftVis = 0;
+        for (var x = node.X - 1; x >= 0; x--)
+        {
+            var neighbor = nodesMatrix[x, node.Y];
+            leftVis++;
+
+            if (neighbor.Height >= node.Height)
+                break;
+        }
+
+        //Right (node.x => xMax)
+        var rightVis = 0;
+        for (var x = node.X + 1; x < xMax; x++)
+        {
+            var neighbor = nodesMatrix[x, node.Y];
+            rightVis++;
+
+            if (neighbor.Height >= node.Height)
+                break;
+        }
+
+        node.TreesSeen = upVis * downVis * rightVis * leftVis;
+    }
+
+    [Test]
+    public void FindTreesSeenTests()
+    {
+        var list = new List<string>
+        {
+            "11111",
+            "12221",
+            "12321",
+            "12231",
+            "11111"
+        };
+        var (xMax, yMax, nodesMatrix, nodes) = GenerateTheMatrix(list);
+        var node = nodesMatrix[2, 2];
+        FindTreesSeen(node, nodesMatrix, xMax, yMax);
+        node.TreesSeen.ShouldBe(16);
+
+        node = nodesMatrix[1, 1];
+        FindTreesSeen(node, nodesMatrix, xMax, yMax);
+        node.TreesSeen.ShouldBe(1);
+
+        node = nodesMatrix[0, 2];
+        FindTreesSeen(node, nodesMatrix, xMax, yMax);
+        node.TreesSeen.ShouldBe(0);
+
+        node = nodesMatrix[3, 3];
+        FindTreesSeen(node, nodesMatrix, xMax, yMax);
+        node.TreesSeen.ShouldBe(9);
+
+        list = new List<string>
+        {
+            "11111",
+            "12241",
+            "12321",
+            "12231",
+            "11111"
+        };
+        (xMax, yMax, nodesMatrix, nodes) = GenerateTheMatrix(list);
+        node = nodesMatrix[3, 3];
+        FindTreesSeen(node, nodesMatrix, xMax, yMax);
+        node.TreesSeen.ShouldBe(6);
     }
 
     [Test]
     public void ExamplePart2()
     {
+        NumberNeighborsVisible(_sample).ShouldBe(8);
     }
 
     [Test]
     public async Task ActualPart2()
     {
+        var list = await Utilities.ReadInputByDay("Day08");
+        NumberNeighborsVisible(list).ShouldBe(259308);
     }
 }
