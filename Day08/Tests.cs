@@ -17,6 +17,9 @@ internal class Tests
     public class Node
     {
         public bool Visible { get; set; }
+        public int TreesSeen { get; set; }
+
+
         public int X { get; }
         public int Y { get; }
         public int Height { get; set; }
@@ -30,31 +33,33 @@ internal class Tests
 
         public override string ToString()
         {
-            return $"{X},{Y}: {Height} {Visible}";
+            return $"{X},{Y}: {Height} {Visible} {TreesSeen}";
+        }
+    }
+
+    private static void GenerateTheMatrix(List<string> input, out int xMax, out int yMax, out Node[,] nodesMatrix, out List<Node> nodes)
+    {
+        xMax = input.First().Length;
+        yMax = input.Count;
+        nodesMatrix = new Node[xMax, yMax];
+        nodes = new List<Node>();
+
+        for (var x = 0; x < xMax; x++)
+        {
+            for (var y = 0; y < yMax; y++)
+            {
+                var height = int.Parse(input[y][x].ToString());
+                var node = new Node(x, y, height);
+                nodesMatrix[x, y] = node;
+                nodes.Add(node);
+            }
         }
     }
 
     //Worst ever
     public int NumberVisible(List<string> list)
     {
-        var xMax = list.First().Length;
-        var yMax = list.Count;
-        var nodesMatrix = new Node[xMax,yMax];
-        var nodes = new List<Node>();
-        
-        for (var x = 0; x < xMax; x++)
-        {
-            for (var y = 0; y < yMax; y++)
-            {
-                var height = int.Parse(list[y][x].ToString());
-                var node = new Node(x, y, height);
-                nodesMatrix[x, y] = node;
-                nodes.Add(node);
-            }
-        }
-        Console.WriteLine("Orig");
-        PrintMatrix(xMax, yMax, nodesMatrix);
-        Console.WriteLine();
+        GenerateTheMatrix(list, out var xMax, out var yMax, out var nodesMatrix, out var nodes);
 
         //Edges
         for (var x = 0; x < xMax; x++)
@@ -69,51 +74,21 @@ internal class Tests
             nodesMatrix[xMax - 1, y].Visible = true;
         }
 
-        Console.WriteLine("Edges");
-        PrintMatrix(xMax, yMax, nodesMatrix);
-        Console.WriteLine();
-
         //Sweep left to right
         for (var x = 0; x < xMax; x++)
         {
             SweepUpAndDown(yMax, nodesMatrix, x);
-
-            Console.WriteLine($"L2R x:{x}");
-            PrintMatrix(xMax, yMax, nodesMatrix);
-            Console.WriteLine();
-        }
-
-        //Sweep right to left
-        for (var x = xMax - 1; x >= 0 ; x--)
-        {
-            SweepUpAndDown(yMax, nodesMatrix, x);
-            Console.WriteLine($"R2L x:{x}");
-            PrintMatrix(xMax, yMax, nodesMatrix);
-            Console.WriteLine();
+            SweepUpAndDown(yMax, nodesMatrix, xMax - 1 - x);
         }
 
         //Sweep top to bottom
         for (var y = 0; y < yMax; y++)
         {
             SweepLeftToRight(xMax, nodesMatrix, y);
-
-            Console.WriteLine($"T2B y:{y}");
-            PrintMatrix(xMax, yMax, nodesMatrix);
-            Console.WriteLine();
+            SweepLeftToRight(xMax, nodesMatrix, yMax - 1 - y);
         }
 
-        //Sweep bottom to top
-        for (var y = yMax - 1; y >= 0; y--)
-        {
-            SweepLeftToRight(xMax, nodesMatrix, y);
-
-            Console.WriteLine($"B2T y:{y}");
-            PrintMatrix(xMax, yMax, nodesMatrix);
-            Console.WriteLine();
-        }
-
-        Console.WriteLine("Final");
-        PrintMatrix(xMax, yMax, nodesMatrix);
+        PrintMatrix("Final", xMax, yMax, nodesMatrix);
 
         return nodes.Count(x=>x.Visible);
     }
@@ -147,8 +122,9 @@ internal class Tests
         }
     }
 
-    private void PrintMatrix(int xMax, int yMax, Node[,] nodesMatrix)
+    private void PrintMatrix(string label, int xMax, int yMax, Node[,] nodesMatrix)
     {
+        Console.WriteLine(label);
         for (int x = 0; x < xMax; x++)
         {
             for (int y = 0; y < yMax; y++)
@@ -158,6 +134,7 @@ internal class Tests
             }
             Console.WriteLine();
         }
+        Console.WriteLine();
     }
 
     private static void SweepUpAndDown(int yMax, Node[,] nodesMatrix, int x)
@@ -207,6 +184,18 @@ internal class Tests
     {
         var list = await Utilities.ReadInputByDay("Day08");
         NumberVisible(list).ShouldBe(1798);
+    }
+
+    //Worst ever
+    public int NumberNeighborsVisible(List<string> list)
+    {
+        GenerateTheMatrix(list, out var xMax, out var yMax, out var nodesMatrix, out var nodes);
+
+        
+
+        PrintMatrix("Final", xMax, yMax, nodesMatrix);
+
+        return nodes.Count(x => x.Visible);
     }
 
     [Test]
