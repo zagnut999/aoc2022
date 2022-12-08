@@ -24,21 +24,15 @@ internal class Tests2
         public Node? Left { get; set; }
         public Node? Right { get; set; }
 
-        private bool? _visible;
         public bool Visible
         {
             get
             {
-                if (!_visible.HasValue)
-                {
-                    _visible = (Up == null || Down == null || Left == null || Right == null);
-                    _visible = CheckVisible(Up, x => x.Up)
-                               || CheckVisible(Down, x => x.Down)
-                               || CheckVisible(Left, x => x.Left)
-                               || CheckVisible(Right, x => x.Right);
-                }
-
-                return _visible.Value;
+                return (Up == null || Down == null || Left == null || Right == null) 
+                       || CheckVisible(Up, x => x.Up) 
+                       || CheckVisible(Down, x => x.Down)
+                       || CheckVisible(Left, x => x.Left)
+                       || CheckVisible(Right, x => x.Right);
             }
         }
         private bool CheckVisible(Node? node, Func<Node, Node?> next)
@@ -49,21 +43,15 @@ internal class Tests2
             return CheckVisible(next(node), next);
         }
 
-        private int? _treesSeen;
         public int TreesSeen
         {
             get
             {
-                if (!_treesSeen.HasValue)
-                {
-                    var up = CheckTreesSeen(Up, x => x.Up);
-                    var down = CheckTreesSeen(Down, x => x.Down);
-                    var left = CheckTreesSeen(Left, x => x.Left);
-                    var right = CheckTreesSeen(Right, x => x.Right);
-                    _treesSeen = up * down * left * right;
-                }
-
-                return _treesSeen.Value;
+                var up = CheckTreesSeen(Up, x => x.Up);
+                var down = CheckTreesSeen(Down, x => x.Down);
+                var left = CheckTreesSeen(Left, x => x.Left);
+                var right = CheckTreesSeen(Right, x => x.Right);
+                return up * down * left * right;
             }
         }
 
