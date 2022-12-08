@@ -1,11 +1,9 @@
-﻿using NUnit.Framework.Interfaces;
-
-namespace aoc2022.Day08;
+﻿namespace aoc2022.Day08;
 
 [TestFixture]
 internal class Tests
 {
-    private readonly List<string> _sample = new List<string>()
+    private readonly List<string> _sample = new()
     {
         "30373",
         "25512",
@@ -66,7 +64,7 @@ internal class Tests
         for (var x = 0; x < xMax; x++)
         {
             nodesMatrix[x, 0].Visible = true;
-            nodesMatrix[x, yMax-1].Visible = true;
+            nodesMatrix[x, yMax - 1].Visible = true;
         }
 
         for (var y = 0; y < yMax; y++)
@@ -91,7 +89,7 @@ internal class Tests
 
         PrintMatrix("Final", xMax, yMax, nodesMatrix);
 
-        return nodes.Count(x=>x.Visible);
+        return nodes.Count(x => x.Visible);
     }
 
     private void SweepLeftToRight(int xMax, Node[,] nodesMatrix, int y)
@@ -196,8 +194,6 @@ internal class Tests
             FindTreesSeen(node, nodesMatrix, xMax, yMax);
         }
 
-        PrintMatrix("Final", xMax, yMax, nodesMatrix);
-
         return nodes.Max(x => x.TreesSeen);
     }
 
@@ -261,7 +257,7 @@ internal class Tests
             "12231",
             "11111"
         };
-        var (xMax, yMax, nodesMatrix, nodes) = GenerateTheMatrix(list);
+        var (xMax, yMax, nodesMatrix, _) = GenerateTheMatrix(list);
         var node = nodesMatrix[2, 2];
         FindTreesSeen(node, nodesMatrix, xMax, yMax);
         node.TreesSeen.ShouldBe(16);
@@ -277,8 +273,12 @@ internal class Tests
         node = nodesMatrix[3, 3];
         FindTreesSeen(node, nodesMatrix, xMax, yMax);
         node.TreesSeen.ShouldBe(9);
+    }
 
-        list = new List<string>
+    [Test]
+    public void FindTreesSeenTests2()
+    {
+        var list = new List<string>
         {
             "11111",
             "12241",
@@ -286,8 +286,9 @@ internal class Tests
             "12231",
             "11111"
         };
-        (xMax, yMax, nodesMatrix, nodes) = GenerateTheMatrix(list);
-        node = nodesMatrix[3, 3];
+
+        var (xMax, yMax, nodesMatrix, _) = GenerateTheMatrix(list);
+        var node = nodesMatrix[3, 3];
         FindTreesSeen(node, nodesMatrix, xMax, yMax);
         node.TreesSeen.ShouldBe(6);
     }
