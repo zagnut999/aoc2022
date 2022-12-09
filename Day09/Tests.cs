@@ -145,7 +145,7 @@ internal class Tests
 
         public override string ToString()
         {
-            return $"{ID} ({X},{Y})";
+            return $"{ID} ({_location})";
         }
 
         private void AddedVisited(Location location)
@@ -406,7 +406,7 @@ internal class Tests
     }
 
     [Test]
-    public void ExamplePart2a()
+    public void ExamplePart2A()
     {
         var state = new State(10);
         var lines = new List<string>
