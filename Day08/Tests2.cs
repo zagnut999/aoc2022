@@ -14,6 +14,13 @@ internal class Tests2
 
     public class Node
     {
+        public Node(int x, int y, int height)
+        {
+            X = x;
+            Y = y;
+            Height = height;
+        }
+
         public int Height { get; set; }
 
         public int X { get; }
@@ -24,17 +31,26 @@ internal class Tests2
         public Node? Left { get; set; }
         public Node? Right { get; set; }
 
-        public bool Visible
+        public bool Visible =>
+            (Up == null || Down == null || Left == null || Right == null) 
+            || CheckVisible(Up, NextUp) 
+            || CheckVisible(Down, NextDown)
+            || CheckVisible(Left, NextLeft)
+            || CheckVisible(Right, NextRight);
+
+        
+        public int TreesSeen
         {
             get
             {
-                return (Up == null || Down == null || Left == null || Right == null) 
-                       || CheckVisible(Up, x => x.Up) 
-                       || CheckVisible(Down, x => x.Down)
-                       || CheckVisible(Left, x => x.Left)
-                       || CheckVisible(Right, x => x.Right);
+                var up = CheckTreesSeen(Up, NextUp);
+                var down = CheckTreesSeen(Down, NextDown);
+                var left = CheckTreesSeen(Left, NextLeft);
+                var right = CheckTreesSeen(Right, NextRight);
+                return up * down * left * right;
             }
         }
+
         private bool CheckVisible(Node? node, Func<Node, Node?> next)
         {
             if (node == null) return true;
@@ -42,19 +58,7 @@ internal class Tests2
 
             return CheckVisible(next(node), next);
         }
-
-        public int TreesSeen
-        {
-            get
-            {
-                var up = CheckTreesSeen(Up, x => x.Up);
-                var down = CheckTreesSeen(Down, x => x.Down);
-                var left = CheckTreesSeen(Left, x => x.Left);
-                var right = CheckTreesSeen(Right, x => x.Right);
-                return up * down * left * right;
-            }
-        }
-
+        
         private int CheckTreesSeen(Node? node, Func<Node, Node?> next)
         {
             if (node == null) return 0;
@@ -63,17 +67,15 @@ internal class Tests2
             return 1 + CheckTreesSeen(next(node), next);
         }
 
-        public Node(int x, int y, int height)
-        {
-            X = x;
-            Y = y;
-            Height = height;
-        }
-
         public override string ToString()
         {
             return $"{X},{Y}: {Height} {Visible} {TreesSeen}";
         }
+
+        private static readonly Func<Node, Node?> NextUp = x => x.Up;
+        private static readonly Func<Node, Node?> NextDown = x => x.Down;
+        private static readonly Func<Node, Node?> NextLeft = x => x.Left;
+        private static readonly Func<Node, Node?> NextRight = x => x.Right;
     }
 
     private static (int xMax, int yMax, List<Node> nodes) GenerateTheMatrix(List<string> input)
@@ -156,7 +158,7 @@ internal class Tests2
 
     public int NumberNeighborsVisible(List<string> list)
     {
-        var (xMax, yMax, nodes) = GenerateTheMatrix(list);
+        var (_, _, nodes) = GenerateTheMatrix(list);
 
         return nodes.Max(x => x.TreesSeen);
     }
