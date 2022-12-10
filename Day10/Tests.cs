@@ -5,13 +5,7 @@ namespace aoc2022.Day10;
 [TestFixture]
 internal class Tests
 {
-    public interface ITick
-    {
-        void DuringTick();
-        void AtEndOfTick();
-    }
-
-    private class Cpu : ITick
+    private class Cpu
     {
         public int X { get; private set; }
 
@@ -22,17 +16,28 @@ internal class Tests
             {"addx", 2}
         };
 
-        public Cpu()
+        public Cpu(Clock clock)
         {
             X = 1;
-        }
 
-        public void DuringTick()
+            clock.OnTickStarted += TickStartedHandler;
+            clock.OnTickEnding += TickEndingHandler;
+        }
+        
+        public readonly List<int> SignalStrengths = new();
+        private int _nextTickToRecord = 20;
+
+        private void TickStartedHandler(object? sender, TickEventArgs args)
         {
-            // Look busy
+            if (args.Tick == _nextTickToRecord)
+            {
+                _nextTickToRecord += 40;
+                var strength = args.Tick * X;
+                SignalStrengths.Add(strength);
+            }
         }
 
-        public void AtEndOfTick()
+        private void TickEndingHandler(object? sender, TickEventArgs args)
         {
             if (_commands.Any(x => x.CyclesLeft != 0))
             {
@@ -97,22 +102,24 @@ internal class Tests
     [Test]
     public void CpuTests()
     {
-        var cpu = new Cpu();
+        var clock = new Clock();
+        var cpu = new Cpu(clock);
+
         cpu.AddInstructions(new () { "noop", "addx 3", "addx -5"});
-
-        cpu.AtEndOfTick();
+        
+        clock.Tick();
         cpu.X.ShouldBe(1);
 
-        cpu.AtEndOfTick();
+        clock.Tick();
         cpu.X.ShouldBe(1);
 
-        cpu.AtEndOfTick();
+        clock.Tick();
         cpu.X.ShouldBe(4);
 
-        cpu.AtEndOfTick();
+        clock.Tick();
         cpu.X.ShouldBe(4);
 
-        cpu.AtEndOfTick();
+        clock.Tick();
         cpu.X.ShouldBe(-1);
     }
 
@@ -120,30 +127,18 @@ internal class Tests
     [Test]
     public void Example()
     {
-        var cpu = new Cpu();
+
         var clock = new Clock();
-        clock.RegisterTicker(cpu);
+        var cpu = new Cpu(clock);
 
         cpu.AddInstructions(_sample);
-        var signalStrengths = new List<int>();
-        var nextTickToRecord = 20;
-
+        
         for (var tick = 1; tick < 241; tick++)
         {
-            clock.StartTick();
-
-            //During this tick
-            if (tick == nextTickToRecord)
-            {
-                nextTickToRecord += 40;
-                var strength = tick * cpu.X;
-                signalStrengths.Add(strength);
-            }
-
-            //after tick ends
-            clock.EndTick();
+            clock.Tick();
         }
 
+        var signalStrengths = cpu.SignalStrengths;
         signalStrengths[0].ShouldBe(420);
         signalStrengths[1].ShouldBe(1140);
         signalStrengths[2].ShouldBe(1800);
@@ -165,33 +160,21 @@ internal class Tests
     public async Task Actual()
     {
         var list = await Utilities.ReadInputByDay("Day10");
-        var cpu = new Cpu();
-        cpu.AddInstructions(list);
 
         var clock = new Clock();
-        clock.RegisterTicker(cpu);
-
-        var signalStrengths = new List<int>();
-        var nextTickToRecord = 20;
-
+        var cpu = new Cpu(clock);
+        cpu.AddInstructions(list);
+        
         for (var tick = 1; tick < 241; tick++)
         {
-            clock.StartTick();
-
-            if (tick == nextTickToRecord)
-            {
-                nextTickToRecord += 40;
-                var strength = tick * cpu.X;
-                signalStrengths.Add(strength);
-            }
-
-            clock.EndTick();
+            clock.Tick();
         }
 
+        var signalStrengths = cpu.SignalStrengths;
         signalStrengths.Take(6).Sum(x => x).ShouldBe(12980);
     }
 
-    private class Crt : ITick
+    private class Crt
     {
         private readonly Cpu _cpu;
 
@@ -203,7 +186,7 @@ internal class Tests
         private int _scanIndex;
         private (int x, int y) GetScanCoordinates() => (_scanIndex % Width, _scanIndex / Width);
 
-        public Crt(Cpu cpu)
+        public Crt(Clock clock, Cpu cpu)
         {
             _cpu = cpu;
 
@@ -211,24 +194,8 @@ internal class Tests
             {
                 _screen.Add(new string(' ', Width).ToCharArray());
             }
-        }
 
-        public void DuringTick()
-        {
-            var registerX = _cpu.X;
-            var (x, y) = GetScanCoordinates();
-
-            if (registerX - 1 <= x && x <= registerX + 1)
-            {
-                _screen[y][x] = '#';
-            }
-
-            _scanIndex++;
-        }
-
-        public void AtEndOfTick()
-        {
-            // Put a bow on it
+            clock.OnTickStarted += TickStartedHandler;
         }
 
         public override string ToString()
@@ -241,51 +208,71 @@ internal class Tests
             
             return result.ToString();
         }
+
+        private void TickStartedHandler(object? sender, TickEventArgs args)
+        {
+            var registerX = _cpu.X;
+            var (x, y) = GetScanCoordinates();
+
+            if (registerX - 1 <= x && x <= registerX + 1)
+            {
+                _screen[y][x] = '#';
+            }
+
+            _scanIndex++;
+        }
+    }
+
+    private class TickEventArgs : EventArgs
+    {
+        public TickEventArgs(int tick)
+        {
+            Tick = tick;
+        }
+        
+        public int Tick { get; }
     }
 
     private class Clock
     {
-        private readonly List<ITick> _tickers = new();
+        public event EventHandler<TickEventArgs>? OnTickStarted;
+        public event EventHandler<TickEventArgs>? OnTickEnding;
 
-        public void RegisterTicker(ITick ticker)
+        private int _currentTick;
+
+        public void Tick()
         {
-            _tickers.Add(ticker);
+            _currentTick++;
+            var args = new TickEventArgs(_currentTick);
+
+            OnTickStart(args);
+            
+            OnTickEnd(args);
         }
 
-        public void StartTick()
+        private void OnTickStart(TickEventArgs args)
         {
-            foreach (var ticker in _tickers)
-            {
-                ticker.DuringTick();
-            }
+            OnTickStarted?.Invoke(this, args);
         }
 
-        public void EndTick()
+        private void OnTickEnd(TickEventArgs args)
         {
-            foreach (var ticker in _tickers)
-            {
-                ticker.AtEndOfTick();
-            }
+            OnTickEnding?.Invoke(this, args);
         }
     }
 
     [Test]
     public void ExamplePart2()
     {
-        var cpu = new Cpu();
+        var clock = new Clock();
+        var cpu = new Cpu(clock);
         cpu.AddInstructions(_sample);
 
-        var crt = new Crt(cpu);
-
-        var clock = new Clock();
-        clock.RegisterTicker(cpu);
-        clock.RegisterTicker(crt);
-
+        var crt = new Crt(clock,cpu);
+        
         for (var tick = 0; tick < 240; tick++)
         {
-            clock.StartTick();
-            
-            clock.EndTick();
+            clock.Tick();
         }
 
         Console.WriteLine(crt);
@@ -295,21 +282,15 @@ internal class Tests
     public async Task ActualPart2()
     {
         var list = await Utilities.ReadInputByDay("Day10");
-
-        var cpu = new Cpu();
+        var clock = new Clock();
+        var cpu = new Cpu(clock);
         cpu.AddInstructions(list);
 
-        var crt = new Crt(cpu);
-
-        var clock = new Clock();
-        clock.RegisterTicker(cpu);
-        clock.RegisterTicker(crt);
+        var crt = new Crt(clock,cpu);
 
         for (var tick = 0; tick < 240; tick++)
         {
-            clock.StartTick();
-
-            clock.EndTick();
+            clock.Tick();
         }
 
         Console.WriteLine(crt);
