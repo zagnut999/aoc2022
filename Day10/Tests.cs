@@ -23,7 +23,7 @@ internal class Tests
             clock.OnTickStarted += TickStartedHandler;
             clock.OnTickEnding += TickEndingHandler;
         }
-        
+
         public readonly List<int> SignalStrengths = new();
         private int _nextTickToRecord = 20;
 
@@ -57,16 +57,16 @@ internal class Tests
                 var (command, value) = ParseInstruction(instruction);
                 var cycles = _cycles[command];
 
-                _commands.Add(new (command, value, cycles));
+                _commands.Add(new(command, value, cycles));
             }
         }
-        
+
         private void ProcessInstruction(string op, int? value)
         {
             switch (op)
             {
                 case "noop": break;
-                case "addx": 
+                case "addx":
                     X += value ?? 0;
                     break;
             }
@@ -80,7 +80,7 @@ internal class Tests
 
             if (parts.Length == 2 && int.TryParse(parts[1], out var parsedValue))
                 value = parsedValue;
-            
+
             return (command, value);
         }
 
@@ -105,8 +105,8 @@ internal class Tests
         var clock = new Clock();
         var cpu = new Cpu(clock);
 
-        cpu.AddInstructions(new () { "noop", "addx 3", "addx -5"});
-        
+        cpu.AddInstructions(new() { "noop", "addx 3", "addx -5" });
+
         clock.Tick();
         cpu.X.ShouldBe(1);
 
@@ -132,7 +132,7 @@ internal class Tests
         var cpu = new Cpu(clock);
 
         cpu.AddInstructions(_sample);
-        
+
         for (var tick = 1; tick < 241; tick++)
         {
             clock.Tick();
@@ -164,7 +164,7 @@ internal class Tests
         var clock = new Clock();
         var cpu = new Cpu(clock);
         cpu.AddInstructions(list);
-        
+
         for (var tick = 1; tick < 241; tick++)
         {
             clock.Tick();
@@ -182,7 +182,7 @@ internal class Tests
         private static readonly int Height = 6;
 
         private readonly List<char[]> _screen = new();
-        
+
         private int _scanIndex;
         private (int x, int y) GetScanCoordinates() => (_scanIndex % Width, _scanIndex / Width);
 
@@ -205,7 +205,7 @@ internal class Tests
             {
                 result.Append("[").Append(line).Append("]").AppendLine();
             }
-            
+
             return result.ToString();
         }
 
@@ -229,7 +229,7 @@ internal class Tests
         {
             Tick = tick;
         }
-        
+
         public int Tick { get; }
     }
 
@@ -246,7 +246,7 @@ internal class Tests
             var args = new TickEventArgs(_currentTick);
 
             OnTickStart(args);
-            
+
             OnTickEnd(args);
         }
 
@@ -268,8 +268,8 @@ internal class Tests
         var cpu = new Cpu(clock);
         cpu.AddInstructions(_sample);
 
-        var crt = new Crt(clock,cpu);
-        
+        var crt = new Crt(clock, cpu);
+
         for (var tick = 0; tick < 240; tick++)
         {
             clock.Tick();
@@ -286,7 +286,7 @@ internal class Tests
         var cpu = new Cpu(clock);
         cpu.AddInstructions(list);
 
-        var crt = new Crt(clock,cpu);
+        var crt = new Crt(clock, cpu);
 
         for (var tick = 0; tick < 240; tick++)
         {
