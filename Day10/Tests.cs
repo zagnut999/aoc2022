@@ -1,9 +1,17 @@
-﻿namespace aoc2022.Day10;
+﻿using System.Text;
+
+namespace aoc2022.Day10;
 
 [TestFixture]
 internal class Tests
 {
-    private class Cpu
+    public interface ITick
+    {
+        void DuringTick();
+        void AtEndOfTick();
+    }
+
+    private class Cpu : ITick
     {
         public int X { get; private set; }
 
@@ -19,7 +27,12 @@ internal class Tests
             X = 1;
         }
 
-        public bool Tick()
+        public void DuringTick()
+        {
+            // Look busy
+        }
+
+        public void AtEndOfTick()
         {
             if (_commands.Any(x => x.CyclesLeft != 0))
             {
@@ -27,26 +40,19 @@ internal class Tests
 
                 command.CyclesLeft--;
 
-                if (command.CyclesLeft == 0) 
+                if (command.CyclesLeft == 0)
                     ProcessInstruction(command.Op, command.Value);
-
-                return true;
             }
-
-            return false;
         }
 
         public void AddInstructions(List<string> instructions)
         {
-            var ticks = 0;
             foreach (var instruction in instructions)
             {
                 var (command, value) = ParseInstruction(instruction);
                 var cycles = _cycles[command];
-                ticks += cycles;
-                var executeOn = ticks;
 
-                _commands.Add(new (command, value, cycles, executeOn));
+                _commands.Add(new (command, value, cycles));
             }
         }
         
@@ -78,14 +84,12 @@ internal class Tests
             public string Op { get; }
             public int? Value { get; }
             public int CyclesLeft { get; set; }
-            public int ExecuteOn { get; }
 
-            public Command(string op, int? value, int cyclesLeft, int executeOn)
+            public Command(string op, int? value, int cyclesLeft)
             {
                 Op = op;
                 Value = value;
                 CyclesLeft = cyclesLeft;
-                ExecuteOn = executeOn;
             }
         }
     }
@@ -96,19 +100,19 @@ internal class Tests
         var cpu = new Cpu();
         cpu.AddInstructions(new () { "noop", "addx 3", "addx -5"});
 
-        cpu.Tick();
+        cpu.AtEndOfTick();
         cpu.X.ShouldBe(1);
 
-        cpu.Tick();
+        cpu.AtEndOfTick();
         cpu.X.ShouldBe(1);
 
-        cpu.Tick();
+        cpu.AtEndOfTick();
         cpu.X.ShouldBe(4);
 
-        cpu.Tick();
+        cpu.AtEndOfTick();
         cpu.X.ShouldBe(4);
 
-        cpu.Tick();
+        cpu.AtEndOfTick();
         cpu.X.ShouldBe(-1);
     }
 
@@ -117,13 +121,18 @@ internal class Tests
     public void Example()
     {
         var cpu = new Cpu();
+        var clock = new Clock();
+        clock.RegisterTicker(cpu);
+
         cpu.AddInstructions(_sample);
         var signalStrengths = new List<int>();
         var nextTickToRecord = 20;
 
-        for (var tick = 1; ; tick++)
+        for (var tick = 1; tick < 241; tick++)
         {
-            //During/before this tick
+            clock.StartTick();
+
+            //During this tick
             if (tick == nextTickToRecord)
             {
                 nextTickToRecord += 40;
@@ -131,13 +140,8 @@ internal class Tests
                 signalStrengths.Add(strength);
             }
 
-            //execute tick
-            if (!cpu.Tick()) break;
-
-            // after tick completes
-
-            //only want 6 samples
-            if (nextTickToRecord > 220) break;
+            //after tick ends
+            clock.EndTick();
         }
 
         signalStrengths[0].ShouldBe(420);
@@ -163,12 +167,17 @@ internal class Tests
         var list = await Utilities.ReadInputByDay("Day10");
         var cpu = new Cpu();
         cpu.AddInstructions(list);
+
+        var clock = new Clock();
+        clock.RegisterTicker(cpu);
+
         var signalStrengths = new List<int>();
         var nextTickToRecord = 20;
 
-        for (var tick = 1; ; tick++)
+        for (var tick = 1; tick < 241; tick++)
         {
-            //During/before this tick
+            clock.StartTick();
+
             if (tick == nextTickToRecord)
             {
                 nextTickToRecord += 40;
@@ -176,23 +185,134 @@ internal class Tests
                 signalStrengths.Add(strength);
             }
 
-            //execute tick
-            if (!cpu.Tick()) break;
-
-            // after tick completes
+            clock.EndTick();
         }
 
         signalStrengths.Take(6).Sum(x => x).ShouldBe(12980);
     }
 
+    private class Crt : ITick
+    {
+        private readonly Cpu _cpu;
+
+        private static readonly int Width = 40;
+        private static readonly int Height = 6;
+
+        private readonly List<char[]> _screen = new();
+        
+        private int _scanIndex;
+        private (int x, int y) GetScanCoordinates() => (_scanIndex % Width, _scanIndex / Width);
+
+        public Crt(Cpu cpu)
+        {
+            _cpu = cpu;
+
+            for (var row = 0; row < Height; row++)
+            {
+                _screen.Add(new string(' ', Width).ToCharArray());
+            }
+        }
+
+        public void DuringTick()
+        {
+            var registerX = _cpu.X;
+            var (x, y) = GetScanCoordinates();
+
+            if (registerX - 1 <= x && x <= registerX + 1)
+            {
+                _screen[y][x] = '#';
+            }
+
+            _scanIndex++;
+        }
+
+        public void AtEndOfTick()
+        {
+            // Put a bow on it
+        }
+
+        public override string ToString()
+        {
+            var result = new StringBuilder();
+            foreach (var line in _screen)
+            {
+                result.Append("[").Append(line).Append("]").AppendLine();
+            }
+            
+            return result.ToString();
+        }
+    }
+
+    private class Clock
+    {
+        private readonly List<ITick> _tickers = new();
+
+        public void RegisterTicker(ITick ticker)
+        {
+            _tickers.Add(ticker);
+        }
+
+        public void StartTick()
+        {
+            foreach (var ticker in _tickers)
+            {
+                ticker.DuringTick();
+            }
+        }
+
+        public void EndTick()
+        {
+            foreach (var ticker in _tickers)
+            {
+                ticker.AtEndOfTick();
+            }
+        }
+    }
+
     [Test]
     public void ExamplePart2()
     {
+        var cpu = new Cpu();
+        cpu.AddInstructions(_sample);
+
+        var crt = new Crt(cpu);
+
+        var clock = new Clock();
+        clock.RegisterTicker(cpu);
+        clock.RegisterTicker(crt);
+
+        for (var tick = 0; tick < 240; tick++)
+        {
+            clock.StartTick();
+            
+            clock.EndTick();
+        }
+
+        Console.WriteLine(crt);
     }
 
     [Test]
     public async Task ActualPart2()
     {
+        var list = await Utilities.ReadInputByDay("Day10");
+
+        var cpu = new Cpu();
+        cpu.AddInstructions(list);
+
+        var crt = new Crt(cpu);
+
+        var clock = new Clock();
+        clock.RegisterTicker(cpu);
+        clock.RegisterTicker(crt);
+
+        for (var tick = 0; tick < 240; tick++)
+        {
+            clock.StartTick();
+
+            clock.EndTick();
+        }
+
+        Console.WriteLine(crt);
     }
 
     private readonly List<string> _sample = new()
