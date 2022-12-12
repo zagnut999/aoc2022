@@ -19,4 +19,16 @@ internal static class Utilities
 
         return new List<string>();
     }
+
+    public static async Task<string> ReadInputByDayRaw(string day)
+    {
+        var path = $"../../../{day}/input.txt";
+
+        if (File.Exists(path))
+        {
+            return await File.ReadAllTextAsync(path);
+        }
+
+        return string.Empty;
+    }
 }
