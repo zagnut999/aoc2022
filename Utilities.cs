@@ -31,4 +31,12 @@ internal static class Utilities
 
         return string.Empty;
     }
+
+    public static IReadOnlyList<T> Add<T>(this IReadOnlyList<T> list, T node)
+    {
+        var newList = new List<T>();
+        newList.AddRange(list);
+        newList.Add(node);
+        return newList.AsReadOnly();
+    }
 }
