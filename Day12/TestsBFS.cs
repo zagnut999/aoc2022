@@ -57,11 +57,6 @@ internal class TestsBFS
         }
     }
 
-    // State:
-    // Start, End, Current
-    // Visited, Score
-    // Choices
-
     private static (Node start, Node end, List<Node> nodes) GenerateTheMatrix(List<string> input)
     {
         var xMax = input.First().Length;
