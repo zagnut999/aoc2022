@@ -134,7 +134,6 @@ internal class Tests
                     node.Down.Y == floor
                     || node.Left.Y == floor
                     || node.Right.Y == floor))
-
             {
                 map.Add(node, "O");
                 return true;
@@ -243,7 +242,7 @@ internal class Tests
         }
 
         Print(map);
-        map.Values.Count(x => x == "O").ShouldBe(24659);
 
+        map.Values.Count(x => x == "O").ShouldBe(24659);
     }
 }

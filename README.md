@@ -27,7 +27,7 @@ internal class Tests
     public async Task Actual()
     {
         var list = await ReadInputFile();
-        list.ShouldNotBeEmpty();
+
     }
 
     [Test]
@@ -39,7 +39,6 @@ internal class Tests
     public async Task ActualPart2()
     {
         var list = await ReadInputFile();
-        list.ShouldNotBeEmpty();
 
     }
 }
