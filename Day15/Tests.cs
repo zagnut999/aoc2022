@@ -4,7 +4,6 @@ using NUnit.Framework.Constraints;
 namespace aoc2022.Day15;
 
 [TestFixture]
-[Ignore("DNF")]
 internal class Tests
 {
     private readonly List<string> _sample = new()
@@ -219,7 +218,7 @@ internal class Tests
     {
         var list = await ReadInputFile();
         var (map, ranges) = GenerateMap2(list);
-        var y = 10;
+        var y = 2000000;
         var maxRange = ranges.Values.Max(); //This could be better
 
         var xMin = ranges.Keys.Min(node => node.X) - maxRange;
@@ -237,18 +236,58 @@ internal class Tests
                 count++;
         }
 
-        count.ShouldBe(26);
+        count.ShouldBe(4793062);
     }
 
     [Test]
     public void ExamplePart2()
     {
+        var (map, ranges) = GenerateMap2(_sample);
+        var result = 0;
+        for (var x = 0; x <= 20; x++)
+        {
+            for (var y = 0; y <= 20; y++)
+            {
+                var node = new Node(x, y);
+
+                if (map.ContainsKey(node))
+                    continue;
+
+                if (!ranges.Keys.Any(sensor => sensor.DistanceTo(node) <= ranges[sensor]))
+                {
+                    result = x * 4000000 + y;
+                    break;
+                }
+            }
+        }
+
+        result.ShouldBe(56000011);
     }
 
     [Test]
+    [Ignore("DNF")]
     public async Task ActualPart2()
     {
         var list = await ReadInputFile();
+        var (map, ranges) = GenerateMap2(list);
+        var result = 0;
+        for (var x = 0; x <= 4000000; x++)
+        {
+            for (var y = 0; y <= 4000000; y++)
+            {
+                var node = new Node(x, y);
 
+                if (map.ContainsKey(node))
+                    continue;
+
+                if (!ranges.Keys.Any(sensor => sensor.DistanceTo(node) <= ranges[sensor]))
+                {
+                    result = x * 4000000 + y;
+                    break;
+                }
+            }
+        }
+
+        result.ShouldBe(56000011);
     }
 }
