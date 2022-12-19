@@ -41,14 +41,6 @@ internal class Tests
             return false;
         }
 
-        public bool CanSee(Node node)
-        {
-            if (node.X == X && node.Y == Y) return true;
-            if (node.X == X && node.Z == Z) return true;
-            if (node.Y == Y && node.Z == Z) return true;
-            return false;
-        }
-
         public override string ToString() => $"{X},{Y},{Z}";
 
         public override int GetHashCode() => ToString().GetHashCode();
@@ -96,21 +88,131 @@ internal class Tests
         sum.ShouldBe(3564);
     }
 
-    [Test]
-    [Ignore("DNF")]
-    public void ExamplePart2()
+    private List<Node> Neighbors(Node node)
     {
-        var nodes = ParseInput(_sample);
-        var sum = nodes.Sum(x => 6 - nodes.Where(node => !node.Equals(x)).Count(node => node.IsNeighbor(x)));
-        
-        sum.ShouldBe(58);
+        return new List<Node>
+        {
+            new(node.X, node.Y, node.Z - 1),
+            new(node.X, node.Y, node.Z + 1),
+            new(node.X, node.Y - 1, node.Z),
+            new(node.X, node.Y + 1, node.Z),
+            new(node.X - 1, node.Y, node.Z),
+            new(node.X + 1, node.Y, node.Z)
+        };
     }
 
     [Test]
-    [Ignore("DNF")]
+    public void ExamplePart2()
+    {
+        var nodes = ParseInput(_sample);
+
+        //Search area
+        var minX = nodes.Min(node => node.X) - 1;
+        var minY = nodes.Min(node => node.Y) - 1;
+        var minZ = nodes.Min(node => node.Z) - 1;
+        var maxX = nodes.Max(node => node.X) + 1;
+        var maxY = nodes.Max(node => node.Y) + 1;
+        var maxZ = nodes.Max(node => node.Z) + 1;
+
+        var visited = new List<Node>();
+        var queue = new Queue<Node>();
+        var touched = new Dictionary<Node, int>();
+        nodes.ForEach(node => touched.Add(node, 0));
+
+        var start = new Node(minX, minY, minZ);
+        queue.Enqueue(start);
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            visited.Add(current);
+
+            var neighbors = Neighbors(current);
+
+            var neighborNodes = neighbors.Where(node => touched.ContainsKey(node)).ToList();
+            foreach (var neighbor in neighborNodes)
+            {
+                touched[neighbor]++;
+            }
+
+            //Add neighbors
+            foreach (var neighbor in neighbors)
+            {
+                if (queue.Contains(neighbor))
+                    continue;
+                if (visited.Contains(neighbor))
+                    continue;
+                if (touched.ContainsKey(neighbor))
+                    continue;
+                if (neighbor.X < minX || neighbor.X > maxX 
+                    || neighbor.Y < minY || neighbor.Y > maxY 
+                    || neighbor.Z < minZ || neighbor.Z > maxZ)
+                {
+                    visited.Add(neighbor); // maybe not needed
+                    continue;
+                }
+
+                queue.Enqueue(neighbor);
+            }
+        }
+
+        touched.Values.Sum(x => x).ShouldBe(58);
+    }
+
+    [Test]
     public async Task ActualPart2()
     {
         var list = await ReadInputFile();
+        var nodes = ParseInput(list);
+        //Search area
+        var minX = nodes.Min(node => node.X) - 1;
+        var minY = nodes.Min(node => node.Y) - 1;
+        var minZ = nodes.Min(node => node.Z) - 1;
+        var maxX = nodes.Max(node => node.X) + 1;
+        var maxY = nodes.Max(node => node.Y) + 1;
+        var maxZ = nodes.Max(node => node.Z) + 1;
+
+        var visited = new List<Node>();
+        var queue = new Queue<Node>();
+        var touched = new Dictionary<Node, int>();
+        nodes.ForEach(node => touched.Add(node, 0));
+
+        var start = new Node(minX, minY, minZ);
+        queue.Enqueue(start);
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            visited.Add(current);
+
+            var neighbors = Neighbors(current);
+
+            var neighborNodes = neighbors.Where(node => touched.ContainsKey(node)).ToList();
+            foreach (var neighbor in neighborNodes)
+            {
+                touched[neighbor]++;
+            }
+
+            //Add neighbors
+            foreach (var neighbor in neighbors)
+            {
+                if (queue.Contains(neighbor))
+                    continue;
+                if (visited.Contains(neighbor))
+                    continue;
+                if (touched.ContainsKey(neighbor))
+                    continue;
+                if (neighbor.X < minX || neighbor.X > maxX
+                                      || neighbor.Y < minY || neighbor.Y > maxY
+                                      || neighbor.Z < minZ || neighbor.Z > maxZ)
+                {
+                    visited.Add(neighbor); // maybe not needed
+                    continue;
+                }
+
+                queue.Enqueue(neighbor);
+            }
+        }
+
+        touched.Values.Sum(x => x).ShouldBe(2106);
 
     }
 }
