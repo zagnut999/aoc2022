@@ -69,7 +69,7 @@ internal class Tests
 
     private class Move : ICommand
     {
-        public int Distance { get; set; }
+        public int Distance { get; }
         public Move(int distance)
         {
             Distance = distance;
@@ -77,11 +77,11 @@ internal class Tests
     }
     private class Turn : ICommand
     {
-        public string Direction { get; set; }
+        public string Rotate { get; }
 
-        public Turn(string direction)
+        public Turn(string rotation)
         {
-            Direction = direction;
+            Rotate = rotation;
         }
     }
 
@@ -89,14 +89,14 @@ internal class Tests
     {
         switch (current)
         {
-            case Tests.Direction.Right:
-                return turn.Direction == "L" ? Tests.Direction.Up : Tests.Direction.Down;
-            case Tests.Direction.Left:
-                return turn.Direction == "L" ? Tests.Direction.Down : Tests.Direction.Up;
-            case Tests.Direction.Down:
-                return turn.Direction == "L" ? Tests.Direction.Right : Tests.Direction.Left;
-            case Tests.Direction.Up:
-                return turn.Direction == "L" ? Tests.Direction.Left : Tests.Direction.Right;
+            case Direction.Right:
+                return turn.Rotate == "L" ? Direction.Up : Direction.Down;
+            case Direction.Left:
+                return turn.Rotate == "L" ? Direction.Down : Direction.Up;
+            case Direction.Down:
+                return turn.Rotate == "L" ? Direction.Right : Direction.Left;
+            case Direction.Up:
+                return turn.Rotate == "L" ? Direction.Left : Direction.Right;
             default:
                 throw new ArgumentException();
         }
@@ -215,7 +215,7 @@ internal class Tests
                 case Turn turn:
                     currentDirection = NewDirection(currentDirection, turn);
                     currentNode.Type = GetType(currentDirection);
-                    PrintMap($"{currentNode}, {currentDirection}, {turn.Direction}", result.Nodes);
+                    PrintMap($"{currentNode}, {currentDirection}, {turn.Rotate}", result.Nodes);
                     break;
 
                 case Move move:
