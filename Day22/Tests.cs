@@ -1,6 +1,4 @@
-﻿using System.CodeDom;
-using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace aoc2022.Day22;
 
